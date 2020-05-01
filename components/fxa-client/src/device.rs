@@ -111,6 +111,19 @@ impl FirefoxAccount {
         Ok(())
     }
 
+    /// Register a device capability against the current device.
+    /// No kind of caching is done, as this is intended to be called internally.
+    ///
+    /// **💾 This method alters the persisted account state.**
+    pub(crate) fn register_capability(&mut self, capability: Capability) -> Result<()> {
+        let commands = self.register_capabilities(&[capability])?;
+        let update = DeviceUpdateRequestBuilder::new()
+            .available_commands(&commands)
+            .build();
+        self.update_device(update)?;
+        Ok(())
+    }
+
     pub(crate) fn invoke_command(
         &self,
         command: &str,
@@ -171,7 +184,7 @@ impl FirefoxAccount {
     }
 
     fn parse_commands_messages(
-        &self,
+        &mut self,
         messages: Vec<PendingCommand>,
     ) -> Result<Vec<IncomingDeviceCommand>> {
         let devices = self.get_devices()?;
@@ -189,7 +202,7 @@ impl FirefoxAccount {
     }
 
     fn parse_command(
-        &self,
+        &mut self,
         command_data: CommandData,
         devices: &[Device],
     ) -> Result<IncomingDeviceCommand> {

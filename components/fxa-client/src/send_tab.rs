@@ -5,6 +5,7 @@
 pub use crate::commands::send_tab::{SendTabPayload, TabHistoryEntry};
 use crate::{
     commands::send_tab::{self, EncryptedSendTabPayload, PrivateSendTabKeys, PublicSendTabKeys},
+    device::Capability,
     error::*,
     http_client::GetDeviceResponse,
     scopes, FirefoxAccount, IncomingDeviceCommand,
@@ -49,7 +50,7 @@ impl FirefoxAccount {
     }
 
     pub(crate) fn handle_send_tab_command(
-        &self,
+        &mut self,
         sender: Option<GetDeviceResponse>,
         payload: serde_json::Value,
     ) -> Result<IncomingDeviceCommand> {
@@ -64,7 +65,14 @@ impl FirefoxAccount {
                 }
             };
         let encrypted_payload: EncryptedSendTabPayload = serde_json::from_value(payload)?;
-        let payload = encrypted_payload.decrypt(&send_tab_key)?;
-        Ok(IncomingDeviceCommand::TabReceived { sender, payload })
+        match encrypted_payload.decrypt(&send_tab_key) {
+            Ok(payload) => Ok(IncomingDeviceCommand::TabReceived { sender, payload }),
+            Err(e) => {
+                log::error!("Could not decrypt Send Tab payload. Resetting the Send Tab keys.");
+                self.state.commands_data.remove(send_tab::COMMAND_NAME);
+                self.register_capability(Capability::SendTab)?;
+                Err(e)
+            }
+        }
     }
 }
