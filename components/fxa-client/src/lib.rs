@@ -62,6 +62,7 @@ pub struct FirefoxAccount {
     state: State,
     flow_store: HashMap<String, OAuthFlow>,
     attached_clients_cache: Option<CachedResponse<Vec<http_client::GetAttachedClientResponse>>>,
+    devices_cache: Option<CachedResponse<Vec<http_client::GetDeviceResponse>>>,
 }
 
 impl FirefoxAccount {
@@ -71,6 +72,7 @@ impl FirefoxAccount {
             state,
             flow_store: HashMap::new(),
             attached_clients_cache: None,
+            devices_cache: None,
         }
     }
 
@@ -140,6 +142,7 @@ impl FirefoxAccount {
         self.state = self.state.start_over();
         self.flow_store.clear();
         self.attached_clients_cache = None;
+        self.devices_cache = None;
     }
 
     /// Get the Sync Token Server endpoint URL.

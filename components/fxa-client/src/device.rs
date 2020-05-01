@@ -12,20 +12,39 @@ use crate::{
         CommandData, DeviceUpdateRequest, DeviceUpdateRequestBuilder, PendingCommand,
         UpdateDeviceResponse,
     },
+    util,
+    CachedResponse,
     FirefoxAccount, IncomingDeviceCommand,
 };
 use serde_derive::*;
 use std::collections::{HashMap, HashSet};
 
+// An devices response is considered fresh for `DEVICES_FRESHNESS_THRESHOLD` ms.
+const DEVICES_FRESHNESS_THRESHOLD: u64 = 60_000; // 1 minute
+
 impl FirefoxAccount {
     /// Fetches the list of devices from the current account including
     /// the current one.
-    pub fn get_devices(&self) -> Result<Vec<Device>> {
+    pub fn get_devices(&mut self) -> Result<Vec<Device>> {
+        if let Some(d) = &self.devices_cache {
+            if util::now() < d.cached_at + DEVICES_FRESHNESS_THRESHOLD {
+                return Ok(d.response.clone());
+            }
+        }
+
         let refresh_token = self.get_refresh_token()?;
-        self.client.devices(&self.state.config, &refresh_token)
+        let response = self.client.devices(&self.state.config, &refresh_token)?;
+
+        self.devices_cache = Some(CachedResponse {
+            response: response.clone(),
+            cached_at: util::now(),
+            etag: "".into(),
+        });
+
+        Ok(response)
     }
 
-    pub fn get_current_device(&self) -> Result<Option<Device>> {
+    pub fn get_current_device(&mut self) -> Result<Option<Device>> {
         Ok(self
             .get_devices()?
             .into_iter()
