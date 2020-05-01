@@ -223,10 +223,15 @@ impl FirefoxAccount {
     ///
     /// **💾 This method alters the persisted account state.**
     pub fn disconnect(&mut self) {
+        let current_device_result;
+        {
+            current_device_result = self.get_current_device();
+        }
+
         if let Some(ref refresh_token) = self.state.refresh_token {
             // Delete the current device (which deletes the refresh token), or
             // the refresh token directly if we don't have a device.
-            let destroy_result = match self.get_current_device() {
+            let destroy_result = match current_device_result {
                 // If we get an error trying to fetch our device record we'll at least
                 // still try to delete the refresh token itself.
                 Ok(Some(device)) => {

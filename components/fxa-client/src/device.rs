@@ -12,9 +12,7 @@ use crate::{
         CommandData, DeviceUpdateRequest, DeviceUpdateRequestBuilder, PendingCommand,
         UpdateDeviceResponse,
     },
-    util,
-    CachedResponse,
-    FirefoxAccount, IncomingDeviceCommand,
+    util, CachedResponse, FirefoxAccount, IncomingDeviceCommand,
 };
 use serde_derive::*;
 use std::collections::{HashMap, HashSet};
@@ -190,7 +188,7 @@ impl FirefoxAccount {
     }
 
     fn parse_commands_messages(
-        &self,
+        &mut self,
         messages: Vec<PendingCommand>,
     ) -> Result<Vec<IncomingDeviceCommand>> {
         let devices = self.get_devices()?;
