@@ -671,4 +671,71 @@ mod tests {
 
         fxa.ensure_capabilities(&[Capability::SendTab]).unwrap();
     }
+
+    #[test]
+    fn test_get_devices() {
+        let mut fxa = setup();
+        let mut client = FxAClientMock::new();
+        client
+            .expect_devices(mockiato::Argument::any, mockiato::Argument::any)
+            .times(1)
+            .returns_once(Ok(vec![Device {
+                common: DeviceResponseCommon {
+                    id: "device1".into(),
+                    display_name: "".to_string(),
+                    device_type: DeviceType::Desktop,
+                    push_subscription: None,
+                    available_commands: HashMap::new(),
+                    push_endpoint_expired: true,
+                },
+                is_current_device: true,
+                location: DeviceLocation {
+                    city: None,
+                    country: None,
+                    state: None,
+                    state_code: None,
+                },
+                last_access_time: None,
+            }]));
+
+        fxa.set_client(Arc::new(client));
+        assert!(fxa.devices_cache.is_none());
+
+        let res = fxa.get_devices();
+
+        assert!(res.is_ok());
+        assert!(fxa.devices_cache.is_some());
+
+        let cached_devices_res = fxa.devices_cache.unwrap();
+        assert!(!cached_devices_res.response.is_empty());
+        assert!(cached_devices_res.cached_at > 0);
+
+        let cached_devices = &cached_devices_res.response[0];
+        assert_eq!(cached_devices.clone().id, "device1".to_string());
+    }
+
+    #[test]
+    fn test_get_devices_network_errors() {
+        let mut fxa = setup();
+        let mut client = FxAClientMock::new();
+        client
+            .expect_devices(mockiato::Argument::any, mockiato::Argument::any)
+            .times(1)
+            .returns_once(Err(ErrorKind::RemoteError {
+                code: 500,
+                errno: 101,
+                error: "Did not work!".to_owned(),
+                message: "Did not work!".to_owned(),
+                info: "Did not work!".to_owned(),
+            }
+            .into()));
+
+        fxa.set_client(Arc::new(client));
+        assert!(fxa.devices_cache.is_none());
+
+        let res = fxa.get_devices();
+
+        assert!(res.is_err());
+        assert!(fxa.devices_cache.is_none());
+    }
 }
