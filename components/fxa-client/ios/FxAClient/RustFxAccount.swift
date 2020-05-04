@@ -181,9 +181,9 @@ open class RustFxAccount {
         }
     }
 
-    open func fetchDevices() throws -> [Device] {
+    open func fetchDevices(forceRefresh: Bool = false) throws -> [Device] {
         let ptr = try rustCall { err in
-            fxa_get_devices(self.raw, err)
+            fxa_get_devices(self.raw, forceRefresh, err)
         }
         defer { fxa_bytebuffer_free(ptr) }
         let msg = try! MsgTypes_Devices(serializedData: Data(rustBuffer: ptr))

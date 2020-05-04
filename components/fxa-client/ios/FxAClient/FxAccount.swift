@@ -67,9 +67,9 @@ class FxAccount: RustFxAccount {
         }
     }
 
-    override func fetchDevices() throws -> [Device] {
+    override func fetchDevices(forceRefresh: Bool = false) throws -> [Device] {
         return try notifyAuthErrors {
-            try super.fetchDevices()
+            try super.fetchDevices(forceRefresh: forceRefresh)
         }
     }
 

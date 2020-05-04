@@ -38,7 +38,7 @@ class MockFxAccount: FxAccount {
         invocations.append(.initializeDevice)
     }
 
-    override func fetchDevices() throws -> [Device] {
+    override func fetchDevices(forceRefresh _: Bool) throws -> [Device] {
         invocations.append(.fetchDevices)
         return []
     }

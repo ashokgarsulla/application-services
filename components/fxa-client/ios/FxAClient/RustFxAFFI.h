@@ -95,6 +95,7 @@ FxARustBuffer fxa_profile(FirefoxAccountHandle handle,
                           FxAError *_Nonnull out);
 
 FxARustBuffer fxa_get_devices(FirefoxAccountHandle handle,
+                              bool ignore_cache,
                               FxAError *_Nonnull out);
 
 FxARustBuffer fxa_poll_device_commands(FirefoxAccountHandle handle,

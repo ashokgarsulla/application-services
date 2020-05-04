@@ -465,9 +465,9 @@ class FirefoxAccount(handle: FxaHandle, persistCallback: PersistCallback?) : Aut
      *
      * This performs network requests, and should not be used on the main thread.
      */
-    fun getDevices(): Array<Device> {
+    fun getDevices(ignoreCache: Boolean = false): Array<Device> {
         val devicesBuffer = rustCall { e ->
-            LibFxAFFI.INSTANCE.fxa_get_devices(this.handle.get(), e)
+            LibFxAFFI.INSTANCE.fxa_get_devices(this.handle.get(), ignoreCache, e)
         }
         try {
             val devices = MsgTypes.Devices.parseFrom(devicesBuffer.asCodedInputStream()!!)

@@ -424,8 +424,8 @@ pub extern "C" fn fxa_set_device_name(
 #[no_mangle]
 pub extern "C" fn fxa_get_devices(
     handle: u64,
-    error: &mut ExternError,
     ignore_cache: bool,
+    error: &mut ExternError,
 ) -> ByteBuffer {
     log::debug!("fxa_get_devices");
     ACCOUNTS.call_with_result_mut(error, handle, |fxa| {
