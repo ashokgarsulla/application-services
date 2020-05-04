@@ -23,9 +23,12 @@ const DEVICES_FRESHNESS_THRESHOLD: u64 = 60_000; // 1 minute
 impl FirefoxAccount {
     /// Fetches the list of devices from the current account including
     /// the current one.
-    pub fn get_devices(&mut self) -> Result<Vec<Device>> {
+    ///
+    /// * `ignore_cache` - If set to true, bypass the in-memory cache
+    /// and fetch devices from the server.
+    pub fn get_devices(&mut self, ignore_cache: bool) -> Result<Vec<Device>> {
         if let Some(d) = &self.devices_cache {
-            if util::now() < d.cached_at + DEVICES_FRESHNESS_THRESHOLD {
+            if !ignore_cache && util::now() < d.cached_at + DEVICES_FRESHNESS_THRESHOLD {
                 return Ok(d.response.clone());
             }
         }
@@ -44,7 +47,7 @@ impl FirefoxAccount {
 
     pub fn get_current_device(&mut self) -> Result<Option<Device>> {
         Ok(self
-            .get_devices()?
+            .get_devices(false)?
             .into_iter()
             .find(|d| d.is_current_device))
     }
@@ -191,7 +194,7 @@ impl FirefoxAccount {
         &mut self,
         messages: Vec<PendingCommand>,
     ) -> Result<Vec<IncomingDeviceCommand>> {
-        let devices = self.get_devices()?;
+        let devices = self.get_devices(false)?;
         let parsed_commands = messages
             .into_iter()
             .filter_map(|msg| match self.parse_command(msg.data, &devices) {
@@ -701,7 +704,7 @@ mod tests {
         fxa.set_client(Arc::new(client));
         assert!(fxa.devices_cache.is_none());
 
-        let res = fxa.get_devices();
+        let res = fxa.get_devices(false);
 
         assert!(res.is_ok());
         assert!(fxa.devices_cache.is_some());
@@ -733,7 +736,7 @@ mod tests {
         fxa.set_client(Arc::new(client));
         assert!(fxa.devices_cache.is_none());
 
-        let res = fxa.get_devices();
+        let res = fxa.get_devices(false);
 
         assert!(res.is_err());
         assert!(fxa.devices_cache.is_none());

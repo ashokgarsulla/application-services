@@ -37,7 +37,7 @@ impl FirefoxAccount {
 
     /// Send a single tab to another device designated by its device ID.
     pub fn send_tab(&mut self, target_device_id: &str, title: &str, url: &str) -> Result<()> {
-        let devices = self.get_devices()?;
+        let devices = self.get_devices(false)?;
         let target = devices
             .iter()
             .find(|d| d.id == target_device_id)
