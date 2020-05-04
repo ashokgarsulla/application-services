@@ -136,13 +136,18 @@ impl FirefoxAccount {
         state_persistence::state_to_json(&self.state)
     }
 
+    /// Clear the attached clients and devices cache
+    pub fn clear_devices_and_attached_clients_cache(&mut self) {
+        self.attached_clients_cache = None;
+        self.devices_cache = None;
+    }
+
     /// Clear the whole persisted/cached state of the account, but keep just
     /// enough information to eventually reconnect to the same user account later.
     pub fn start_over(&mut self) {
         self.state = self.state.start_over();
         self.flow_store.clear();
-        self.attached_clients_cache = None;
-        self.devices_cache = None;
+        self.clear_devices_and_attached_clients_cache();
     }
 
     /// Get the Sync Token Server endpoint URL.
